@@ -8,11 +8,14 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 import os
 from langchain_tavily import TavilySearch
+# from langsmith import traceable
+
 
 
 config = dotenv_values('.env')
 
 os.environ["TAVILY_API_KEY"] = config["TAVILY_SEARCH_API_KEY"]
+tavily_search = TavilySearch(tavily_api_key = config["TAVILY_SEARCH_API_KEY"])
 
 llm = ChatGroq(model=config["GROQ_MODEL"],api_key=config["GROQ_API_KEY"]) 
 
@@ -65,7 +68,7 @@ graph_builder.add_node("web_search",tavily_search)
 
 
 
-graph_builder.add_edge(START, "web_search")
+graph_builder.add_edge(START, "chatbot")
 
  
 
@@ -102,7 +105,7 @@ allowed_sites=[
 
 if __name__ == "__main__":
     # current_state_state = State(messages=[])
-    print("Welcome to the Ugnadan Agricultural Traders Business Assistant")
+    print("Welcome to the Ugandan Agricultural Traders Business Assistant")
     print("You can now ask any question related to Agriculture.")
    
     for site in allowed_sites:

@@ -48,4 +48,4 @@ if prompt := st.chat_input("Ask a question"):
     with st.spinner("Thinking..."):
        result = graph.invoke(state)
       
-    #    st.rerun
+    
