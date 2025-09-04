@@ -14,6 +14,8 @@ And a High-Level-Architectural-diagram
 
 This application is a smart chatbot designed to assist Ugandan agricultural traders with business-related queries. It is built using Langgraph, multi-step agent applications. The core of this application's architecture is a Supervisor/Worker pattern, which enables the system to intelligently route a user's request to the appropriate tool.
 
+The Web Agent powered by Tavily consists of three main components: the language model, a set of web tools, and a system prompt. The language model(chatgroq) serves as the agent's "brain", while the web tools such as Tavily search and call_tool allow the agent to interact with and gather information from the allowed sites and intepret, generate reports among others. The system prompt guides the agent's behaviour, explaining how and when to use each tool to accomplish its research goals.
+
 The Architecture: Supervisor and Workers
 
 The Supervisor Agent(Chatbot)

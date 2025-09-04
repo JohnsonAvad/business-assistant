@@ -1,6 +1,5 @@
 import streamlit as st
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
-import uuid
 import os 
 import dotenv
 import ast
@@ -8,44 +7,74 @@ from node import graph, State, allowed_sites
 
 dotenv.load_dotenv()
 
-st.title("Business Assistant Chatbot")
+st.title("eMaisha Pay Agricultural Traders Business Assistant")
 
-if "state" not in st.session_state:
-    st.session_state.state  = {"messages": [],"thread_id":str
-                                      (uuid.uuid4())}
+if "messages" not in st.session_state:
+    st.session_state.messages = []
     
-for message in st.session_state.state["messages"]:
-    message: BaseMessage
+for message in st.session_state.messages:
+    
 
-    Toolcall = "This message is a tool call. "
+    
 
-    if isinstance(message, AIMessage) and not message.content:
-        with st.chat_message(message.type):
-            st.markdown(Toolcall)
+    if isinstance(message, AIMessage) and not message.tool_calls:
+        with st.chat_message("assistant"):
+            st.markdown(message.content)
         
-    elif isinstance(message, ToolMessage):
-        with st.chat_message(message.type):
+    elif isinstance(message, AIMessage) and message.tool_calls:
+        with st.chat_message("assistant"):
+            st.markdown("Thinking...")
+
             with st.expander("Tool Call"):
-                content = message.content
-                content = ast.literal_eval(content)
-                st.markdown(content)
+                st.json(message.tool_calls)
 
-    else:
-        with st.chat_message(message.type):
-            st.write(message.content) 
+    elif isinstance(message, HumanMessage):
+        with st.chat_message("user"):
+            st.markdown(message.content) 
 
-if prompt := st.chat_input("Ask a question"):
-    new_msg = HumanMessage(content=prompt)
+    elif isinstance(message, ToolMessage):
+        with st.chat_message("tool"):
+            st.markdown("Fetching results...")
+
+            with st.expander("Search Results"):
+                try:
+                    content = ast.literal_eval(message.content)
+                    st.json(content)
+                except (ValueError, SyntaxError):
+                    st.markdown(message.content)    
+
+if prompt := st.chat_input("Ask a question about Ugandan agricultural business...."):
+
     
-    st.session_state.state["messages"].append(new_msg)
-    state = State(
-        messages=st.session_state.state["messages"],
-        search_query=prompt,
-        allowed_sites=allowed_sites,
-        
-    )
+    
+    st.session_state.messages.append(HumanMessage(content=prompt))
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    with st.spinner("Thinking..."):
-       result = graph.invoke(state)
-      
+    initial_state = {
+        "messages": [HumanMessage(content=prompt, additional_kwargs={"allowed_sites":allowed_sites})]
+    }
+
+    with st.spinner("Processing..."):
+       
+
+        for s in graph.stream(initial_state):
+            for key, value in s.items():
+                if isinstance(value, dict) and "messages" in value:
+                    new_messages = value["messages"]
+                    for new_msg in new_messages:
+                        if new_msg not in st.session_state.messages:
+                            st.session_state.messages.append(new_msg)
+
+
+
+    st.rerun()
+
+    if st.button("Clear Chat"):
+        st.session_state.messages = []
+        st.rerun()
+
+    
+
+    
     
